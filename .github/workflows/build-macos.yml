@@ -39,7 +39,7 @@ jobs:
         AutoClipintisari.py
 
     - name: Upload Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Intisari-Clipper-MacOS
         path: dist/AutoClipIntisari_Mac.app
