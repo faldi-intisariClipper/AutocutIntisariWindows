@@ -24,22 +24,31 @@ jobs:
 
     - name: Download FFmpeg for macOS
       run: |
-        # Mengambil binary FFmpeg resmi untuk Mac agar user tidak perlu install manual
+        # Mengambil binary FFmpeg untuk Mac
         curl -L https://evermeet.cx/ffmpeg/getrelease/ffmpeg/zip -o ffmpeg.zip
         unzip ffmpeg.zip
-        chmod +x ffmpeg
+        # cari file ffmpeg yang diekstrak dan buat executable
+        if [ -f ffmpeg ]; then chmod +x ffmpeg; elif [ -f ffmpeg* ]; then chmod +x ffmpeg*; fi
 
     - name: Build App with PyInstaller
       run: |
         # --add-binary "ffmpeg:." memasukkan ffmpeg ke dalam aplikasi
-        # --windowed agar tidak muncul jendela hitam terminal
+        # --windowed agar tidak muncul jendela terminal
         pyinstaller --windowed --onefile --noconfirm \
-        --name "AutoClipIntisari_Mac" \
-        --add-binary "ffmpeg:." \
-        AutoClipintisari.py
+          --name "AutoClipIntisari_Mac" \
+          --add-binary "ffmpeg:." \
+          AutoClipintisari.py
+
+    - name: Show build output
+      run: |
+        ls -la dist || true
+        echo "Contents of dist:"
+        find dist -maxdepth 2 -type f -print || true
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
         name: Intisari-Clipper-MacOS
-        path: dist/AutoClipIntisari_Mac.app
+        # upload semua keluaran di dist (mengantisipasi .app atau executable)
+        path: dist/**
+        retention-days: 7
