@@ -1,9 +1,8 @@
-# .github/workflows/build-macos.yml
-name: Build macOS App (Bundled FFmpeg)
+name: Build macOS App
 
 on:
   push:
-    branches: [ main ] # Jalan saat push ke main
+    branches: [ main ]
 
 jobs:
   build-macos:
@@ -11,38 +10,45 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.10'
 
     - name: Install Libraries
       run: |
         python -m pip install --upgrade pip
-        pip install customtkinter requests yt-dlp pyinstaller
+        pip install customtkinter requests yt-dlp pyinstaller packaging
+
+    - name: Create Dummy README (Prevent Error)
+      run: echo "AutoClip Intisari Mac" > README.md
 
     - name: Download FFmpeg for macOS
       run: |
         curl -L https://evermeet.cx/ffmpeg/getrelease/ffmpeg/zip -o ffmpeg.zip
         unzip -o ffmpeg.zip
-        if [ -f ffmpeg ]; then chmod +x ffmpeg; fi
+        chmod +x ffmpeg
 
     - name: Build App with PyInstaller
       run: |
+        # Perhatikan pemisah data menggunakan titik dua (:) untuk Mac
         pyinstaller --windowed --onefile --noconfirm \
           --name "AutoClipIntisari_Mac" \
           --add-binary "ffmpeg:." \
+          --add-data "README.md:." \
           AutoClipintisari.py
 
-    - name: List build output
+    - name: Zip Application (Crucial for Mac)
       run: |
-        ls -lah dist
+        # Kita harus zip manual agar permission file executable tidak rusak saat upload
+        cd dist
+        zip -r Intisari-Clipper-MacOS.zip AutoClipIntisari_Mac.app
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Intisari-Clipper-MacOS
-        path: dist/*
-        retention-days: 7
+        name: Intisari-Clipper-MacOS-Zip
+        path: dist/Intisari-Clipper-MacOS.zip
+        retention-days: 5
