@@ -1,3 +1,4 @@
+# .github/workflows/build-windows.yml
 name: Build Windows App
 
 on:
@@ -24,27 +25,22 @@ jobs:
 
     - name: Download FFmpeg for Windows
       run: |
-        # Script PowerShell untuk download FFmpeg otomatis
         Invoke-WebRequest -Uri "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip" -OutFile "ffmpeg.zip"
         Expand-Archive ffmpeg.zip -DestinationPath .
-        # Cari dan pindahkan ffmpeg.exe (lebih aman daripada path statis)
-        $ff = Get-ChildItem -Path . -Recurse -Filter ffmpeg.exe | Select-Object -First 1
-        if ($ff) { Move-Item -Path $ff.FullName -Destination . } else { Write-Error "ffmpeg.exe not found" }
+        $ffmpegPath = Get-ChildItem -Path . -Filter ffmpeg.exe -Recurse | Select-Object -First 1
+        if ($ffmpegPath) { Move-Item $ffmpegPath.FullName . } else { Write-Error "ffmpeg.exe not found!" }
 
     - name: Build EXE with PyInstaller
       run: |
-        # Perhatikan: Windows menggunakan pemisah titik koma (;) untuk --add-binary
         pyinstaller --noconfirm --onefile --windowed --name "AutoClipintisari" --add-binary "ffmpeg.exe;." --add-data "README.md;." AutoClipintisari.py
 
-    - name: Show build output
+    - name: List build output
       run: |
         dir dist
-        echo "Current working directory:"
-        cd
+
     - name: Upload Artifact (Hasil Jadi)
       uses: actions/upload-artifact@v4
       with:
         name: AutoClipintisari-Windows
-        # upload apapun yang ada di folder dist (aman untuk berbagai nama file)
-        path: dist/**
+        path: dist/*
         retention-days: 7
